@@ -1769,6 +1769,20 @@ async function syncConnect(){
   const t=$('ghTok').value.trim();
   if(!t){toast('Paste a token first');return;}
   ghToken=t;try{localStorage.setItem('fp_gh_token',t);}catch(e){}
+  // Guard: if this browser isn't linked to a gist yet but the account already
+  // has one, offer to load it instead of creating a duplicate empty copy.
+  if(!gistId){
+    try{
+      const resp=await fetch('https://api.github.com/gists?per_page=100',{headers:ghHeaders()});
+      if(resp.ok){
+        const found=(await resp.json()).filter(g=>g.files&&g.files[GIST_FILE]);
+        if(found.length&&confirm('A flatplan library already exists on this GitHub account. Load it on this device instead of creating a new empty one? (Recommended — click OK)')){
+          await pickGist(found.length===1?found[0].id:found.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))[0].id);
+          return;
+        }
+      }
+    }catch(e){console.warn(e);}
+  }
   await gistPush(true);
 }
 async function syncFindLoad(){
