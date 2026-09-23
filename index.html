@@ -1078,7 +1078,7 @@ function refreshSecMgr(){
   if(!sections.length){lv.innerHTML='<p style="color:var(--tx3);font-size:13px">No sections yet.</p>';}
   else{lv.innerHTML=sections.map(s=>{
     const subs=subsections.filter(x=>x.parentId===s.id);
-    return`<div class="sec-chip"><div class="sec-chip-dot" style="background:${s.color}"></div><span class="sec-chip-name">${esc(s.name)}</span>${subs.map(x=>`<span class="sec-chip-sub" style="background:${lighten(s.color,.55)}">${esc(x.name)}<button class="bi" onclick="event.stopPropagation();rmSub('${x.id}')" style="font-size:11px;color:var(--red);padding:0 0 0 4px">✕</button></span>`).join('')}<button class="bi" onclick="rmSec('${s.id}')" style="color:var(--red)">✕</button></div>`;
+    return`<div class="sec-chip"><div class="sec-chip-dot" style="background:${s.color};cursor:pointer" title="Click to change colour" onclick="recolorSec('${s.id}')"></div><span class="sec-chip-name">${esc(s.name)}</span><button class="bi" title="Rename section" onclick="renameSec('${s.id}')">✎</button>${subs.map(x=>`<span class="sec-chip-sub" style="background:${lighten(s.color,.55)}">${esc(x.name)}<button class="bi" title="Rename subsection" onclick="event.stopPropagation();renameSubX('${x.id}')" style="font-size:10px;padding:0 0 0 4px">✎</button><button class="bi" onclick="event.stopPropagation();rmSub('${x.id}')" style="font-size:11px;color:var(--red);padding:0 0 0 4px">✕</button></span>`).join('')}<button class="bi" onclick="rmSec('${s.id}')" style="color:var(--red)" title="Delete section">✕</button></div>`;
   }).join('');}
   $('nsC').innerHTML=COLORS.map(c=>`<div class="clr-s${c===newSecColor?' on':''}" style="background:${c}" onclick="newSecColor='${c}';refreshSecMgr()"></div>`).join('');
   const dd=$('subPar');dd.innerHTML=sections.length?sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join(''):'<option value="">Add a section first</option>';
@@ -1087,6 +1087,9 @@ function doAddSec(){const n=$('nsN').value.trim();if(!n){toast('Enter a name');r
 function rmSec(id){snapshot();sections=sections.filter(s=>s.id!==id);subsections=subsections.filter(s=>s.parentId!==id);S.pages.forEach(p=>{if(p.sectionId===id){p.sectionId='';p.subsectionId='';}});refreshSecMgr();autosave();toast('Removed');}
 function doAddSub(){const pid=$('subPar').value;if(!pid){toast('Add a section first');return;}const n=$('subNm').value.trim();if(!n){toast('Enter a name');return;}snapshot();subsections.push({id:uid(),name:n,parentId:pid});$('subNm').value='';refreshSecMgr();autosave();toast('Subsection added');}
 function rmSub(id){snapshot();subsections=subsections.filter(s=>s.id!==id);S.pages.forEach(p=>{if(p.subsectionId===id)p.subsectionId='';});refreshSecMgr();autosave();}
+function renameSec(id){const s=sections.find(x=>x.id===id);if(!s)return;const n=prompt('Rename section:',s.name);if(!n||!n.trim())return;snapshot();s.name=n.trim();refreshSecMgr();render();toast('Section renamed');}
+function renameSubX(id){const s=subsections.find(x=>x.id===id);if(!s)return;const n=prompt('Rename subsection:',s.name);if(!n||!n.trim())return;snapshot();s.name=n.trim();refreshSecMgr();render();toast('Subsection renamed');}
+function recolorSec(id){const s=sections.find(x=>x.id===id);if(!s)return;snapshot();s.color=COLORS[(COLORS.indexOf(s.color)+1)%COLORS.length];refreshSecMgr();render();}
 
 function openAssignSec(){
   if(!sections.length){toast('Define sections first');return;}if(!sel.size){toast('Select pages first');return;}
