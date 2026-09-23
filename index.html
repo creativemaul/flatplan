@@ -91,7 +91,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* PAGE CARD */
 .pc{width:var(--cw);min-height:var(--ch);background:var(--sf);border:2px solid var(--bd);overflow:hidden;position:relative;display:flex;flex-direction:column;user-select:none;transition:box-shadow .15s,border-color .15s,opacity .15s;}
-.pc:hover{box-shadow:var(--sh2);border-color:var(--bd2);}
+.pc{cursor:pointer;}
+.pc:hover{box-shadow:0 0 0 3px var(--pri-l),var(--sh2);border-color:var(--pri);}
 .pc.sel-on{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-l);}
 .pc.drag-src{opacity:.25;}
 .pc.mark-a{background:var(--adv-bg);border-color:var(--adv-bd);}
@@ -106,13 +107,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* SECTION BAR — text wraps */
 .pc-sec{min-height:18px;display:flex;align-items:center;padding:2px 5px;flex-shrink:0;}
-.pc-sec-t{font-size:7px;font-weight:700;color:#fff;letter-spacing:.2px;text-transform:uppercase;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;line-height:1.2;text-shadow:0 0 2px rgba(0,0,0,.3);}
+.pc-sec-t{font-size:var(--fs-sec,7px);font-weight:700;color:#fff;letter-spacing:.2px;text-transform:uppercase;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;line-height:1.2;text-shadow:0 0 2px rgba(0,0,0,.3);}
 .pc-sub{min-height:14px;display:flex;align-items:center;padding:2px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,.06);}
 .pc-sub-t{font-size:6.5px;font-weight:600;letter-spacing:.2px;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;line-height:1.2;opacity:.9;}
 
 /* CARD BODY — text wraps */
 .pc-body{flex:1;padding:5px 7px 3px;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
-.pc-nm{font-size:11px;font-weight:600;border:0;background:0;width:100%;padding:1px 0;outline:0;cursor:text;color:inherit;font-family:inherit;word-wrap:break-word;}
+.pc-nm{font-size:var(--fs-nm,11px);font-weight:600;border:0;background:0;width:100%;padding:1px 0;outline:0;cursor:text;color:inherit;font-family:inherit;word-wrap:break-word;transition:font-size .15s;}
 .pc-nm:focus{border-bottom:1.5px solid var(--pri);}
 .pc-tag{font-size:9px;margin-top:2px;padding:2px 5px;background:rgba(0,0,0,.05);border-radius:3px;display:inline-block;cursor:pointer;border:1px solid transparent;align-self:flex-start;transition:.12s;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;}
 .pc-tag:hover{border-color:var(--bd);}
@@ -132,7 +133,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .pc-ft{padding:3px 6px;border-top:1px solid var(--bd);background:var(--sf2);flex-shrink:0;display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;}
 .mark-a .pc-ft{background:rgba(26,95,168,.04);}
 .mark-d .pc-ft{background:rgba(138,109,0,.04);}
-.pc-num{font-size:11px;font-weight:700;color:var(--tx2);}
+.pc-num{font-size:var(--fs-num,11px);font-weight:700;color:var(--tx2);}
+
+/* INSERT-BETWEEN-SPREADS LINES */
+.gap-ins{width:12px;align-self:stretch;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:5px;color:transparent;flex-shrink:0;font-size:14px;font-weight:700;position:relative;transition:.12s;}
+.gap-ins::before{content:'';position:absolute;top:8px;bottom:8px;left:50%;width:2px;transform:translateX(-50%);border-left:2px dashed transparent;transition:.12s;}
+.gap-ins:hover{background:var(--pri-l);color:var(--pri);}
+.gap-ins:hover::before{border-color:var(--pri);}
+.gap-ins span{background:var(--sf);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;box-shadow:0 0 0 1px var(--bd);}
+.gap-ins:hover span{box-shadow:0 0 0 1.5px var(--pri);}
 .pc-status{font-size:8px;font-weight:600;padding:1px 5px;border-radius:3px;cursor:pointer;white-space:nowrap;letter-spacing:.2px;transition:.12s;}
 .pc-status:hover{opacity:.8;}
 .pc-acts{display:flex;gap:1px;opacity:0;transition:.12s;margin-left:auto;}.pc:hover .pc-acts{opacity:1;}
@@ -307,7 +316,7 @@ body.vh-num .pc-num{display:none!important;}
 @media print{
   .home{display:none!important;}
   body{background:#fff!important;}
-  .hdr,.tb,.sel,.vp,.mbg,.toast,.pc-acts,.ctd,.pc-grip,.stats,#stDrop,.fb,.pc-thumb-x{display:none!important;}
+  .hdr,.tb,.sel,.vp,.mbg,.toast,.pc-acts,.ctd,.pc-grip,.stats,#stDrop,.fb,.pc-thumb-x,.gap-ins{display:none!important;}
   .pc-thumb{print-color-adjust:exact;-webkit-print-color-adjust:exact;}
   .main-wrap{display:block!important;}
   .main{padding:0!important;margin:0!important;max-width:none!important;overflow:visible!important;}
@@ -830,11 +839,28 @@ function render(){
     else if(i===P.length-1){g.appendChild(mkSlot([P[i]],'slot-s slot-cb'));i++;}
     else if(i+1<P.length-1){g.appendChild(mkSlot([P[i],P[i+1]],'slot-sp'));i+=2;}
     else{g.appendChild(mkSlot([P[i]],'slot-s'));i++;}
+    if(i<P.length)g.appendChild(mkIns(i));
   }
   renderPB();updCt();updSelBar();renderStats();autosave();
 }
 
 function mkSlot(pgs,cls){const d=document.createElement('div');d.className='slot '+cls;pgs.forEach(pg=>d.appendChild(mkCard(pg,false)));return d;}
+
+function mkIns(pos){
+  const d=document.createElement('div');
+  d.className='gap-ins';
+  d.title='Insert a spread here (Alt-click: single page)';
+  d.innerHTML='<span>+</span>';
+  d.onclick=e=>{
+    snapshot();
+    const n=e.altKey?1:2;
+    const np=[];for(let k=0;k<n;k++)np.push(mkPg('Page',''));
+    S.pages.splice(pos,0,...np);
+    renum();render();
+    toast(n===2?'Spread inserted':'Page inserted');
+  };
+  return d;
+}
 
 function mkCard(pg,isPB){
   const c=document.createElement('div');
@@ -1934,14 +1960,14 @@ function doPDFExport(){
         :root{--cw:${newCW}px!important;--ch:${newCH}px!important;--sw:${newSW}px!important;--gap:${newGap}px!important;}
         .grid{gap:${newGap}px!important;}
         .pc{font-size:${fontSize}!important;}
-        .pc-nm{font-size:${Math.max(7,Math.round(11*zoomFactor))}px!important;}
+        .pc-nm{font-size:calc(var(--fs-nm,11px)*${zoomFactor})!important;}
         .pc-tag{font-size:${Math.max(5,Math.round(9*zoomFactor))}px!important;}
         .pc-topic{font-size:${Math.max(5,Math.round(9*zoomFactor))}px!important;}
         .pc-auth{font-size:${Math.max(5,Math.round(8.5*zoomFactor))}px!important;}
         .pc-auth-row .ic{width:${Math.max(4,Math.round(8*zoomFactor))}px!important;height:${Math.max(4,Math.round(8*zoomFactor))}px!important;}
-        .pc-sec-t{font-size:${Math.max(4,Math.round(7*zoomFactor))}px!important;}
+        .pc-sec-t{font-size:calc(var(--fs-sec,7px)*${zoomFactor})!important;}
         .pc-sub-t{font-size:${Math.max(4,Math.round(6.5*zoomFactor))}px!important;}
-        .pc-num{font-size:${Math.max(6,Math.round(11*zoomFactor))}px!important;}
+        .pc-num{font-size:calc(var(--fs-num,11px)*${zoomFactor})!important;}
         .pc-status{font-size:${Math.max(5,Math.round(8*zoomFactor))}px!important;}
         .pc-badge{font-size:${Math.max(5,Math.round(8*zoomFactor))}px!important;}
         .pc-grip{display:none!important;}
@@ -1991,6 +2017,16 @@ function hiddenView(){try{return JSON.parse(localStorage.getItem('fp_view')||'[]
 function applyView(){
   const h=hiddenView();
   VIEWKEYS.forEach(([k])=>document.body.classList.toggle('vh-'+k,h.includes(k)));
+  setDensityVars(h);
+}
+/* Adaptive type: the fewer details shown on cards, the bigger names/sections/folios get —
+   on screen and (scaled) in the PDF, since print sizes derive from these variables */
+function setDensityVars(h){
+  const n=['topic','auth','type','status','badge','thumb'].filter(k=>h.includes(k)).length;
+  const r=document.documentElement.style;
+  r.setProperty('--fs-nm',Math.min(22,11+n*2)+'px');
+  r.setProperty('--fs-sec',Math.min(14,7+n*1.3)+'px');
+  r.setProperty('--fs-num',Math.min(18,11+n*1.2)+'px');
 }
 function toggleView(k){
   let h=hiddenView();
@@ -2024,7 +2060,7 @@ function togglePView(k){
   try{localStorage.setItem('fp_pview',JSON.stringify(h));}catch(e){}
   renderPdfViewOpts();
 }
-function applyPView(){const h=hiddenPView();VIEWKEYS.forEach(([k])=>document.body.classList.toggle('vh-'+k,h.includes(k)));}
+function applyPView(){const h=hiddenPView();VIEWKEYS.forEach(([k])=>document.body.classList.toggle('vh-'+k,h.includes(k)));setDensityVars(h);}
 function renderPdfViewOpts(){
   const el=$('pdfViewOpts');if(!el)return;
   const h=hiddenPView();
