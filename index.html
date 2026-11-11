@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- FlatPlan Maker · fpfit v1 (11 Nov 2026, Storial): card name/topic/author wrap to fit and step their size down when needed. Presentation only: data, storage, sync and import/export unchanged. -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -337,6 +338,18 @@ body.vh-num .pc-num{display:none!important;}
 }
 body:not(.printing) .print-title,body:not(.printing) .print-footer{display:none!important;}
 @media(max-width:900px){.stats{display:none;}.main-wrap{display:block;}.hdr{flex-wrap:wrap;gap:8px;}.hdr-r{flex-wrap:wrap;}}
+
+/* fpfit v1: card text wraps to the box and steps down in size instead of being cut off */
+.pc-nm.fpfit-nm,.pc-auth.fpfit-auth{resize:none;overflow:hidden;display:block;white-space:pre-wrap;overflow-wrap:break-word;word-break:normal;line-height:1.2;height:auto;min-height:0;}
+.pc-nm.fpfit-nm{flex:0 0 auto;transition:none;}
+.pc-auth.fpfit-auth{flex:1;min-width:0;}
+.pc-auth-row:has(.fpfit-auth){align-items:flex-start;}
+.pc-auth-row:has(.fpfit-auth) .ic{margin-top:2px;flex-shrink:0;}
+.pc-topic.fpfit-topic{overflow:hidden;overflow-wrap:break-word;}
+.pc-topic.fpfit-topic:focus{overflow:auto;}
+.pc-body:has(> .fpfit-ell){position:relative;}
+.fpfit-ell{position:absolute;right:7px;padding:0 1px 0 6px;background:linear-gradient(90deg,rgba(255,255,255,0),var(--sf) 40%);color:var(--tx2);font-weight:700;pointer-events:none;}
+.pc-topic.fpfit-topic:focus ~ .fpfit-ell{display:none;}
 </style>
 </head>
 <body>
@@ -904,13 +917,13 @@ function mkCard(pg,isPB){
     <div class="pc-grip" onpointerdown="startDrag(event,'${pg.id}','${isPB?'pb':'main'}')">⠿⠿⠿</div>
     ${secBar}${subBar}${thumb}
     <div class="pc-body">
-      <input class="pc-nm" value="${esc(pg.name)}" spellcheck="false"
-        onchange="upd('${pg.id}','name',this.value)" onblur="upd('${pg.id}','name',this.value)">
+      <textarea class="pc-nm fpfit-nm" rows="1" spellcheck="false" onkeydown="fpfitKey(event)" oninput="fpfitInput(this)"
+        onchange="upd('${pg.id}','name',this.value)" onblur="upd('${pg.id}','name',this.value)">${esc(pg.name)}</textarea>
       <span class="pc-tag" onclick="event.stopPropagation();showCT(event,'${pg.id}')">${pg.contentType||'Set type...'}</span>
-      <textarea class="pc-topic" placeholder="Topic..." rows="2"
+      <textarea class="pc-topic fpfit-topic" placeholder="Topic..." rows="2" oninput="fpfitInput(this)"
         onchange="upd('${pg.id}','topic',this.value)" onblur="upd('${pg.id}','topic',this.value)">${esc(pg.topic??pg.notes??'')}</textarea>
-      <div class="pc-auth-row"><svg class="ic"><use href="#i-user"/></svg><input class="pc-auth" placeholder="Author..." value="${esc(pg.author||'')}" spellcheck="false"
-        onchange="upd('${pg.id}','author',this.value)" onblur="upd('${pg.id}','author',this.value)"></div>
+      <div class="pc-auth-row"><svg class="ic"><use href="#i-user"/></svg><textarea class="pc-auth fpfit-auth" rows="1" placeholder="Author..." spellcheck="false" onkeydown="fpfitKey(event)" oninput="fpfitInput(this)"
+        onchange="upd('${pg.id}','author',this.value)" onblur="upd('${pg.id}','author',this.value)">${esc(pg.author||'')}</textarea></div>
       ${badge}
     </div>
     <div class="pc-ft">
@@ -2096,6 +2109,38 @@ document.addEventListener('keydown',e=>{
 });
 
 init();
+
+/* ═══  FPFIT v1: fit card text (presentation only)  ═══ */
+const FPFIT={nmLines:3,nmMin:7,auLines:2,auMin:6.5,tpMin:6.5,step:.5};
+function fpfitKey(e){if(e.key==='Enter'){e.preventDefault();e.target.blur();}}
+function fpfitInput(el){if(el.classList.contains('fpfit-nm')||el.classList.contains('fpfit-auth')){if(/[\r\n]/.test(el.value)){const p=el.selectionStart;el.value=el.value.replace(/[\r\n]+/g,' ');try{el.setSelectionRange(p,p);}catch(_){}}}
+  const c=el.closest('.pc');if(c)fpfitCard(c);}
+function fpfitLines(el){const cs=getComputedStyle(el);const lh=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.2;
+  el.style.height='auto';el.style.height='0px';const h=el.scrollHeight-(parseFloat(cs.paddingTop)||0)-(parseFloat(cs.paddingBottom)||0);return{n:Math.round(h/lh),lh,h:el.scrollHeight};}
+function fpfitShrink(el,maxLines,minPx){   // wrap first; step the size down only while it needs more than maxLines
+  el.style.fontSize='';const base=parseFloat(getComputedStyle(el).fontSize);let fs=base,r=fpfitLines(el);
+  while(r.n>maxLines&&fs-FPFIT.step>=minPx){fs-=FPFIT.step;el.style.fontSize=fs+'px';r=fpfitLines(el);}
+  el.style.height=(maxLines&&r.n>maxLines?Math.ceil(r.lh*maxLines):r.h)+'px';
+  el.classList.toggle('fpfit-clip',r.n>maxLines);el.title=r.n>maxLines||fs<base?el.value:'';}
+function fpfitTopic(el){   // fills the space left; steps down until it fits
+  el.style.fontSize='';const base=parseFloat(getComputedStyle(el).fontSize);let fs=base;
+  while(el.scrollHeight>el.clientHeight+1&&fs-FPFIT.step>=FPFIT.tpMin){fs-=FPFIT.step;el.style.fontSize=fs+'px';}
+  const more=el.scrollHeight>el.clientHeight+1;el.title=(more||fs<base)?el.value:'';
+  const body=el.parentNode;let m=body.querySelector(':scope > .fpfit-ell');
+  if(more){if(!m){m=document.createElement('span');m.className='fpfit-ell';m.textContent='…';m.setAttribute('aria-hidden','true');body.appendChild(m);}
+    const lh=parseFloat(getComputedStyle(el).lineHeight)||fs*1.3;m.style.fontSize=fs+'px';m.style.lineHeight=lh+'px';
+    m.style.top=(el.offsetTop+Math.floor(el.clientHeight/lh)*lh-lh)+'px';m.title=el.value;}
+  else if(m)m.remove();}
+function fpfitCard(c){
+  const nm=c.querySelector('.fpfit-nm'),au=c.querySelector('.fpfit-auth'),tp=c.querySelector('.fpfit-topic');
+  if(nm&&nm.offsetParent!==null)fpfitShrink(nm,FPFIT.nmLines,FPFIT.nmMin);
+  if(au&&au.offsetParent!==null)fpfitShrink(au,FPFIT.auLines,FPFIT.auMin);
+  if(tp&&tp.offsetParent!==null&&tp.value)fpfitTopic(tp);else if(tp){tp.style.fontSize='';tp.title='';const m=tp.parentNode.querySelector(':scope > .fpfit-ell');if(m)m.remove();}}
+function fpfitAll(root){(root||document).querySelectorAll('.pc').forEach(fpfitCard);}
+let fpfitRaf=0;function fpfitSoon(){cancelAnimationFrame(fpfitRaf);fpfitRaf=requestAnimationFrame(()=>fpfitAll());}
+(function(){const wrap=n=>{const f=window[n];if(typeof f!=='function')return;window[n]=function(){const r=f.apply(this,arguments);fpfitSoon();return r;};};
+  ['render','renderPB','applyView'].forEach(wrap);
+  window.addEventListener('resize',fpfitSoon);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fpfitSoon);})();
 </script>
 </body>
 </html>
